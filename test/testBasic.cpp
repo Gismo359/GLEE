@@ -3,6 +3,6 @@
 using glee::Window;
 
 int main() {
-	Window window{ "GLEE Test Window", 0, 0, 800, 600, };
+	Window window{ "GLEE Test Window", 10, 10, 800, 600 };
 	window.loop();
 };

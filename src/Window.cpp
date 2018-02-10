@@ -2,15 +2,16 @@
 // Created by braynstorm on 2/10/18.
 //
 
+#include "Log.hpp"
 #include "Window.hpp"
 
 namespace glee {
     void Window::callRenderCallbacks(Uint32 delta) {
-        for (auto &&function : _renderCallbacks) { function(delta); }
+        for (auto&& function : _renderCallbacks) { function(delta); }
     }
 
     void Window::callEventCallbacks(Uint32 delta, SDL_Event event) {
-        for (auto &&function : _eventCallbacks) {
+        for (auto&& function : _eventCallbacks) {
             // TODO: Possibly add a handled flag via a wrapper and make EventCallback return void?
             if (function(delta, event))
                 // TODO: Do something else once handled?
@@ -18,8 +19,11 @@ namespace glee {
         }
     }
 
-    Window::Window(const std::string &title, int x, int y, int width, int height) {
-        SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+    Window::Window(const std::string& title, int x, int y, int width, int height) {
+        if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO) == -1) {
+            LOG(ERROR, "SDL Failed to initialize!");
+            abort();
+        }
 
         _sdlWindow = SDL_CreateWindow(title.c_str(), x, y, width, height, SDL_WINDOW_OPENGL);
     }
@@ -50,20 +54,24 @@ namespace glee {
     }
 
     // TODO: Maybe add separate wrappers for width/height
-    void Window::getSize(int &width, int &height) { SDL_GetWindowSize(_sdlWindow, &width, &height); }
+    void Window::getSize(int& width, int& height) { SDL_GetWindowSize(_sdlWindow, &width, &height); }
+
     void Window::setSize(int width, int height) { SDL_SetWindowSize(_sdlWindow, width, height); }
 
     Uint32 Window::getFrameLength() { return _frameLength; }
+
     void Window::setFrameLength(Uint32 newLength) { _frameLength = newLength; }
 
     std::string Window::getTitle() { return SDL_GetWindowTitle(_sdlWindow); }
-    void Window::setTitle(const std::string &title) { SDL_SetWindowTitle(_sdlWindow, title.c_str()); }
+
+    void Window::setTitle(const std::string& title) { SDL_SetWindowTitle(_sdlWindow, title.c_str()); }
 
     void Window::addRenderCallback(Window::RenderCallback callback) { _renderCallbacks.push_back(callback); }
+
     void Window::addEventCallback(Window::EventCallback callback) { _eventCallbacks.push_back(callback); }
 
     void Window::stop() {
-        // TODO: Do render-specific cleanup if necessery
+        // TODO: Do render-specific cleanup if necessary
         _running = false;
     }
 
