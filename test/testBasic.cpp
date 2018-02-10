@@ -1,4 +1,5 @@
 #include "../src/GLEE.hpp"
+#include "../src/Log.hpp"
 
 using glee::Window;
 using glee::Line;
@@ -29,8 +30,11 @@ int main() {
         return false;
     });
 
-    window.addRenderCallback([&batch](Window& window, float delta) {
+    window.addRenderCallback([&line1, &batch](Window& window, float delta) {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         batch.draw();
+        line1.draw();
+        LOG(INFO, "Ho");
     });
 
     window.loop();
