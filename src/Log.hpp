@@ -22,32 +22,32 @@
 #endif
 
 namespace ThreeDee {
-	enum class LogLevel {
-		DEBUG = -2,
-		TRACE,
-		INFO,
-		WARN,
-		ERROR,
-		FATAL
-	};
+    enum class LogLevel {
+        DEBUG = -2,
+        TRACE,
+        INFO,
+        WARN,
+        ERROR,
+        FATAL
+    };
 
-	template<typename ... Tail>
-	void log(
-		LogLevel level,
-		int line,
-		const char* filename,
-		const char* format,
-		const Tail ... strings
-	) {
-		printf("[%2d][%25s:%-5d] => ", level, filename, line);
+    template<typename ... Tail>
+    void log(
+        LogLevel level,
+        int line,
+        const char* filename,
+        const char* format,
+        const Tail ... strings
+    ) {
+        printf("[%2d][%25s:%-5d] => ", level, filename, line);
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wformat-security"
-		printf(format, strings...); // TODO figure out if this is really a security risk,
-		// because we're logging god damn it! Logs should be "static" in terms of format
+        printf(format, strings...); // TODO figure out if this is really a security risk,
+        // because we're logging god damn it! Logs should be "static" in terms of format
 #pragma clang diagnostic pop
-		printf("\n");
-	};
+        printf("\n");
+    };
 };
 
 #if defined(PLATFORM_LINUX)
