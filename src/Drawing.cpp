@@ -81,20 +81,23 @@ namespace glee {
 
     vec2 Line::getEnd() { return _endVertex; }
 
-    void Line::setStart(vec2&& start) {
+    Line& Line::setStart(vec2&& start) {
         _startVertex = start;
         updateVertices();
+        return *this;
     }
 
-    void Line::setEnd(vec2&& end) {
+    Line& Line::setEnd(vec2&& end) {
         _endVertex = end;
         updateVertices();
+        return *this;
     }
 
-    void Line::setEndPoints(vec2&& start, vec2&& end) {
+    Line& Line::setEndPoints(vec2&& start, vec2&& end) {
         _startVertex = start;
         _endVertex = end;
         updateVertices();
+        return *this;
     }
 
     void Line::draw() {
@@ -127,21 +130,24 @@ namespace glee {
     }
 
 
-    void Line::setColors(uint32_t startARGB, uint32_t endARGB) {
+    Line& Line::setColors(uint32_t startARGB, uint32_t endARGB) {
         _startColor = fromUINT32(startARGB);
         _endColor = fromUINT32(endARGB);
 
         updateColors();
+        return *this;
     }
 
-    void Line::setStartColor(uint32_t startARGB) {
+    Line& Line::setStartColor(uint32_t startARGB) {
         _startColor = fromUINT32(startARGB);
         updateColors();
+        return *this;
     }
 
-    void Line::setEndColor(uint32_t endARGB) {
+    Line& Line::setEndColor(uint32_t endARGB) {
         _endColor = fromUINT32(endARGB);
         updateColors();
+        return *this;
     }
 
     LineBatch::LineBatch() : _vao{ 0 } {
@@ -163,6 +169,11 @@ namespace glee {
 
     void LineBatch::addLine(Line&& line) {
         _lines.emplace_back(line);
+        markDirty();
+    }
+
+    void LineBatch::addLine(Line line) {
+        _lines.emplace_back(std::move(line));
         markDirty();
     }
 

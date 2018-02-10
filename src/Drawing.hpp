@@ -37,13 +37,12 @@ namespace glee {
 
         virtual ~Line() override;
 
-        void setStart(vec2&& start);
-        void setEnd(vec2&& end);
-        void setEndPoints(vec2&& start, vec2&& end);
-
-        void setColors(uint32_t startARGB, uint32_t endARGB);
-        void setStartColor(uint32_t startARGB);
-        void setEndColor(uint32_t endARGB);
+        Line& setStart(vec2&& start);
+        Line& setEnd(vec2&& end);
+        Line& setEndPoints(vec2&& start, vec2&& end);
+        Line& setColors(uint32_t startARGB, uint32_t endARGB);
+        Line& setStartColor(uint32_t startARGB);
+        Line& setEndColor(uint32_t endARGB);
 
         vec2 getStart();
         vec2 getEnd();
@@ -71,6 +70,7 @@ namespace glee {
         LineBatch& operator=(LineBatch&&) = delete;
         LineBatch& operator=(const LineBatch&) = default;
 
+        void addLine(Line);
         void addLine(Line&&);
         void addLine(std::vector<Line>::iterator, Line&&);
         void addLine(std::vector<Line>::const_iterator, Line&&);
