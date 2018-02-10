@@ -14,15 +14,18 @@ namespace glee {
     class Window {
       private:
         using RenderCallback = std::function<void(Uint32 delta)>;
+        using EventCallback = std::function<bool(Uint32 delta, SDL_Event event)>;
 
         SDL_Window *_sdlWindow;
-        std::set<RenderCallback> _renderCallbacks;
+        std::vector<RenderCallback> _renderCallbacks;
+        std::vector<EventCallback> _eventCallbacks;
 
         bool _running;
 
         Uint32 _frameLength;
 
         void callRenderCallbacks(Uint32 delta);
+        void callEventCallbacks(Uint32 delta, SDL_Event event);
 
       public:
         Window(const std::string &title, int x, int y, int width, int height);
@@ -39,6 +42,7 @@ namespace glee {
         void setFrameLength(Uint32 newLength);
 
         void addRenderCallback(RenderCallback callback);
+        void addEventCallback(EventCallback callback);
 
         void stop();
         void close();
