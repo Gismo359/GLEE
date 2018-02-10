@@ -3,7 +3,13 @@ project(GLEE)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(GLEE_SOURCE src/Dummy.cpp)
+set(GLEE_SOURCE
+    src/Dummy.cpp
+    src/Drawing.cpp
+    src/Drawing.hpp
+    src/Window.cpp
+    src/Window.hpp
+    )
 
 add_library(GLEE SHARED ${GLEE_SOURCE})
 target_link_libraries(GLEE GL SDL2)
