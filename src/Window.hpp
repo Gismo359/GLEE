@@ -22,7 +22,7 @@ namespace glee {
 
         bool _running;
 
-        Uint32 _frameLength;
+        Uint32 _frameLength = 1000/60;
 
         void callRenderCallbacks(Uint32 delta);
         void callEventCallbacks(Uint32 delta, SDL_Event event);

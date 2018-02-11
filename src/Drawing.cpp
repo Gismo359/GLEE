@@ -3,8 +3,6 @@
 //
 
 #include "Drawing.hpp"
-#include "GLES2/gl2.h"
-#include "GLES3/gl3.h"
 
 namespace glee {
     using glm::vec2;

@@ -7,6 +7,7 @@
 
 
 #include <glm/glm.hpp>
+#include <GL/glew.h>
 #include <GL/gl.h>
 
 #include <vector>
@@ -67,8 +68,8 @@ namespace glee {
         LineBatch(LineBatch&&) = default;
         LineBatch(const LineBatch&) = delete;
 
-        LineBatch& operator=(LineBatch&&) = delete;
-        LineBatch& operator=(const LineBatch&) = default;
+        LineBatch& operator=(LineBatch&&) = default;
+        LineBatch& operator=(const LineBatch&) = delete;
 
         void addLine(Line);
         void addLine(Line&&);
