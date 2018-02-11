@@ -2,16 +2,17 @@
 // Created by braynstorm on 2/10/18.
 //
 
+#include <GL/glew.h>
 #include "Window.hpp"
 #include "Log.hpp"
 
 namespace glee {
     void Window::callRenderCallbacks(Uint32 delta) {
-        for (auto &&function : _renderCallbacks) { function(*this, delta); }
+        for (auto&& function : _renderCallbacks) { function(*this, delta); }
     }
 
     void Window::callEventCallbacks(Uint32 delta, SDL_Event event) {
-        for (auto &&function : _eventCallbacks) {
+        for (auto&& function : _eventCallbacks) {
             // TODO: Possibly add a handled flag via a wrapper and make EventCallback return void?
             if (function(*this, delta, event))
                 // TODO: Do something else once handled?
@@ -19,18 +20,29 @@ namespace glee {
         }
     }
 
-    Window::Window(const std::string &title, int x, int y, int width, int height) {
+    Window::Window(const std::string& title, int x, int y, int width, int height) {
         if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO) == -1) {
             LOG(ERROR, "SDL Failed to initialize!");
             abort();
         }
 
         _sdlWindow = SDL_CreateWindow(title.c_str(), x, y, width, height, SDL_WINDOW_OPENGL);
+        auto context = SDL_GL_CreateContext(_sdlWindow);
+
+        glewExperimental = true;
+        auto error = glewInit();
+
+        if (error) {
+            LOG(INFO, "%s", glewGetErrorString(error));
+        }
+
+        LOG(INFO, "NVIDIAAAA");
     }
 
     void Window::loop() {
         _running = true;
 
+        SDL_GL_SwapWindow(_sdlWindow);
         Uint32 lastTick = SDL_GetTicks();
 
         while (_running) {
@@ -54,7 +66,7 @@ namespace glee {
     }
 
     // TODO: Maybe add separate wrappers for width/height
-    void Window::getSize(int &width, int &height) const { SDL_GetWindowSize(_sdlWindow, &width, &height); }
+    void Window::getSize(int& width, int& height) const { SDL_GetWindowSize(_sdlWindow, &width, &height); }
 
     void Window::setSize(int width, int height) { SDL_SetWindowSize(_sdlWindow, width, height); }
 
@@ -64,7 +76,7 @@ namespace glee {
 
     std::string Window::getTitle() const { return SDL_GetWindowTitle(_sdlWindow); }
 
-    void Window::setTitle(const std::string &title) { SDL_SetWindowTitle(_sdlWindow, title.c_str()); }
+    void Window::setTitle(const std::string& title) { SDL_SetWindowTitle(_sdlWindow, title.c_str()); }
 
     void Window::addRenderCallback(Window::RenderCallback callback) { _renderCallbacks.push_back(callback); }
 

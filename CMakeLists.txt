@@ -13,7 +13,10 @@ set(GLEE_SOURCE
     src/GLEE.hpp)
 
 add_library(GLEE SHARED ${GLEE_SOURCE})
-target_link_libraries(GLEE GL SDL2)
+target_link_libraries(GLEE GL GLEW SDL2)
 
 add_executable(testBasic test/testBasic.cpp)
-target_link_libraries(testBasic GLEE)
+target_link_libraries(testBasic GLEE GL GLEW SDL2)
+
+add_executable(test2 test/text2.cpp)
+target_link_libraries(test2 GL GLEW SDL2)
