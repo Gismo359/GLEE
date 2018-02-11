@@ -13,29 +13,33 @@
 namespace glee {
     class Window {
       private:
-        using RenderCallback = std::function<void(Window &window, Uint32 delta)>;
-        using EventCallback = std::function<bool(Window &window, Uint32 delta, SDL_Event event)>;
-
-        SDL_Window *_sdlWindow;
+        using RenderCallback = std::function<void(Window& window, Uint32 delta)>;
+        using EventCallback = std::function<bool(Window& window, Uint32 delta, SDL_Event event)>;
+        // TODO reorder the members here to account for cache-missing.
+        SDL_Window* _sdlWindow;
         std::vector<RenderCallback> _renderCallbacks;
         std::vector<EventCallback> _eventCallbacks;
 
         bool _running;
 
-        Uint32 _frameLength = 1000/60;
+        Uint32 _frameLength = 1000 / 60;
+
+        GLuint _shaderProgram = 0;
+        GLint _uniformProjectionMatrix = 0;
+        GLint _uniformModelViewMatrix = 0;
 
         void callRenderCallbacks(Uint32 delta);
         void callEventCallbacks(Uint32 delta, SDL_Event event);
 
       public:
-        Window(const std::string &title, int x, int y, int width, int height);
+        Window(const std::string& title, int x, int y, int width, int height);
 
         void loop();
 
         std::string getTitle() const;
-        void setTitle(const std::string &title);
+        void setTitle(const std::string& title);
 
-        void getSize(int &width, int &height) const;
+        void getSize(int& width, int& height) const;
         void setSize(int width, int height);
 
         Uint32 getFrameLength() const;
@@ -46,6 +50,7 @@ namespace glee {
 
         void stop();
         void close();
+        void compileShaderProgram();
     };
 } // namespace glee
 #endif // GLEE_WINDOW_HPP

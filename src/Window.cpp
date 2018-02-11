@@ -7,6 +7,139 @@
 #include "Log.hpp"
 
 namespace glee {
+    using string= std::string;
+    const string VERTEX_SHADER_SRC = ""
+        "\n#version 410"
+        "\nlayout (location = 0) in vec2 position;"
+        "\n"
+        "\nuniform mat4 projectionMatrix;"
+        "\nuniform mat4 modelViewMatrix;"
+        "\n"
+        "\nout vec4 finalVertexPosition;"
+        "\nvoid main(){"
+        "\n   finalVertexPosition = vec4(position, 0.0, 1.0);"
+        "\n   gl_Position = finalVertexPosition;"
+        "\n}"
+        "\n";
+    const string FRAGMENT_SHADER_SRC = ""
+        "\n#version 410"
+        "\nlayout (location = 1) in vec4 vertexColor;"
+        "\nout vec4 pixelColor;"
+        "\nvoid main(){"
+        "\n   pixelColor = vec4(1.0, 1.0, 1.0, 1.0);"
+        "\n                         "
+        "\n}"
+        "\n"
+        "\n";
+
+    void logGlErrors() {
+        auto error = glGetError();
+        if (error) {
+            LOG(WARN, "GL_ERROR: %s", glewGetErrorString(error));
+        }
+
+    }
+
+    void logGlShaderErrors(GLuint shader) {
+        GLint len = 100;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
+        std::vector<char> log(static_cast<unsigned long>(len), ' ');
+        glGetShaderInfoLog(shader, static_cast<GLsizei>(log.size()), &len, &log[0]);
+
+        if (log.size() > 0) {
+            auto infoLogString = string(std::begin(log), std::end(log));
+
+            LOG(ERROR, "Couldn't compile shaders. %s", infoLogString.c_str());
+        }
+    }
+
+    void Window::compileShaderProgram() {
+        _shaderProgram = glCreateProgram();
+        auto shaderVertex = glCreateShader(GL_VERTEX_SHADER);
+        auto shaderFragment = glCreateShader(GL_FRAGMENT_SHADER);
+
+        auto src_vertex = VERTEX_SHADER_SRC.c_str();
+        auto src_vertex_size = static_cast<GLint>(VERTEX_SHADER_SRC.size());
+
+        auto src_fragment = FRAGMENT_SHADER_SRC.c_str();
+        auto src_fragment_size = static_cast<GLint>(VERTEX_SHADER_SRC.size());
+
+        glShaderSource(shaderVertex, 1, &src_vertex, &src_vertex_size);
+        glShaderSource(shaderFragment, 1, &src_fragment, &src_fragment_size);
+
+        glCompileShader(shaderVertex);
+        logGlErrors();
+        logGlShaderErrors(shaderVertex);
+        glCompileShader(shaderFragment);
+        logGlErrors();
+        logGlShaderErrors(shaderFragment);
+
+        glAttachShader(_shaderProgram, shaderVertex);
+        logGlErrors();
+        glAttachShader(_shaderProgram, shaderFragment);
+        logGlErrors();
+
+        glLinkProgram(_shaderProgram);
+        logGlErrors();
+
+        GLint isLinked = 0;
+        glGetProgramiv(_shaderProgram, GL_LINK_STATUS, &isLinked);
+        if (isLinked == GL_FALSE) {
+
+            GLint maxLength = 0;
+            glGetProgramiv(_shaderProgram, GL_INFO_LOG_LENGTH, &maxLength);
+
+            std::vector<GLchar> infoLog(static_cast<unsigned long>(maxLength));
+            glGetProgramInfoLog(_shaderProgram, maxLength, &maxLength, &infoLog[0]);
+
+            auto infoLogString = string(std::begin(infoLog), std::end(infoLog));
+            LOG(ERROR, "Couldn't link shaders. %s", infoLogString.c_str());
+
+            glDeleteProgram(_shaderProgram);
+        }
+
+
+        glValidateProgram(_shaderProgram);
+        logGlErrors();
+
+        GLint isValid = 0;
+        glGetProgramiv(_shaderProgram, GL_VALIDATE_STATUS, &isValid);
+        if (isValid == GL_FALSE) {
+            GLint maxLength = 0;
+            glGetProgramiv(_shaderProgram, GL_INFO_LOG_LENGTH, &maxLength);
+
+            std::vector<GLchar> infoLog(static_cast<unsigned long>(maxLength));
+            glGetProgramInfoLog(_shaderProgram, maxLength, &maxLength, &infoLog[0]);
+
+            auto infoLogString = string(std::begin(infoLog), std::end(infoLog));
+
+            LOG(ERROR, "Couldn't link shaders. %s", infoLogString.c_str());
+
+            glDeleteProgram(_shaderProgram);
+        }
+
+        glUseProgram(_shaderProgram);
+
+        _uniformProjectionMatrix = glGetUniformLocation(_shaderProgram, "projectionMatrix");
+        _uniformModelViewMatrix = glGetUniformLocation(_shaderProgram, "modelViewMatrix");
+
+        float matrixIdentity[]{
+            1.f, 0.f, 0.f, 0.f,
+            0.f, 1.f, 0.f, 0.f,
+            0.f, 0.f, 1.f, 0.f,
+            0.f, 0.f, 0.f, 1.f
+        };
+
+        glUniformMatrix4fv(_uniformProjectionMatrix, 1, GL_FALSE, matrixIdentity);
+        logGlErrors();
+        glUniformMatrix4fv(_uniformModelViewMatrix, 1, GL_FALSE, matrixIdentity);
+        logGlErrors();
+
+        glBindFragDataLocation(_shaderProgram, GL_COLOR_ATTACHMENT0, "pixelColor");
+
+    }
+
+
     void Window::callRenderCallbacks(Uint32 delta) {
         for (auto&& function : _renderCallbacks) { function(*this, delta); }
     }
@@ -36,7 +169,8 @@ namespace glee {
             LOG(INFO, "%s", glewGetErrorString(error));
         }
 
-        LOG(INFO, "NVIDIAAAA");
+        compileShaderProgram();
+        LOG(INFO, "%s -> %s", glGetString(GL_VENDOR), glGetString(GL_VERSION));
     }
 
     void Window::loop() {
@@ -58,6 +192,8 @@ namespace glee {
             // TODO: Comprimise for multiple missed frames
             if (delta > getFrameLength()) {
                 // TODO: Check for double-buffering and clearing options
+
+                glUseProgram(_shaderProgram);
                 callRenderCallbacks(delta);
 
                 SDL_GL_SwapWindow(_sdlWindow);
