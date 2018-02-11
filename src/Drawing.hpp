@@ -52,12 +52,12 @@ namespace glee {
         void draw();
 
       private:
-        GLuint _vbo = 0;
+        GLuint _vbo;
 
         vec2 _startVertex;
         vec2 _endVertex;
-        vec4 _startColor;
-        vec4 _endColor;
+        vec4 _startColor{ 1.0, 1.0, 1.0, 1.0 };
+        vec4 _endColor{ 1.0, 1.0, 1.0, 1.0 };
     };
 
     class LineBatch {

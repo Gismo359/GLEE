@@ -21,7 +21,7 @@ namespace glee {
         glBindBuffer(GL_ARRAY_BUFFER, _vbo);
         glBufferData(
             GL_ARRAY_BUFFER,
-            4 * sizeof(float),
+            (2 * (2 + 4)) * sizeof(float),
             nullptr,
             dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW
         );
@@ -46,33 +46,33 @@ namespace glee {
             _endColor.x, _endColor.y, _endColor.z, _endColor.w,
         };
 
-        glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-        glBufferSubData(GL_ARRAY_BUFFER, 4 * sizeof(float), 4 * 2 * sizeof(float), data);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+//        glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+//        glBufferSubData(GL_ARRAY_BUFFER, 4 * sizeof(float), 4 * 2 * sizeof(float), data);
+//        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     void Line::bindToVAO() const {
-        glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-
-        glVertexAttribPointer(
-            0,
-            2,
-            GL_FLOAT,
-            GL_FALSE,
-            0,
-            nullptr
-        );
-
-        glVertexAttribPointer(
-            1,
-            4,
-            GL_FLOAT,
-            GL_FALSE,
-            4 * sizeof(float),
-            nullptr
-        );
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+//        glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+//
+//        glVertexAttribPointer(
+//            0,
+//            2,
+//            GL_FLOAT,
+//            GL_FALSE,
+//            0,
+//            nullptr
+//        );
+//
+//        glVertexAttribPointer(
+//            1,
+//            4,
+//            GL_FLOAT,
+//            GL_FALSE,
+//            4 * sizeof(float),
+//            nullptr
+//        );
+//
+//        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     vec2 Line::getStart() { return _startVertex; }
@@ -100,6 +100,27 @@ namespace glee {
 
     void Line::draw() {
         glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+
+        glVertexAttribPointer(
+            0,
+            2,
+            GL_FLOAT,
+            GL_FALSE,
+            0,
+            (GLvoid*) 0
+        );
+
+        glVertexAttribPointer(
+            1,
+            4,
+            GL_FLOAT,
+            GL_FALSE,
+            0,
+            (GLvoid*) (sizeof(float) * 4)
+        );
+
         glDrawArrays(GL_LINES, 0, 1);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
@@ -155,9 +176,9 @@ namespace glee {
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
 
-        glBindVertexArray(0);
-        glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glBindVertexArray(0);
     }
 
     LineBatch::LineBatch(std::initializer_list<Line> lines) : LineBatch{ } {
