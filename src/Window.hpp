@@ -9,6 +9,7 @@
 #include <functional>
 #include <set>
 #include <string>
+#include <GL/glew.h>
 
 namespace glee {
     class Window {

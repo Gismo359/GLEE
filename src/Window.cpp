@@ -8,15 +8,14 @@
 #include "Window.hpp"
 #include "Log.hpp"
 
+
+#define LOG_GL_ERROR {\
+    auto error = glGetError();\
+    if (error) LOG(WARN, "GL_ERROR: %d -> %s", error, glewGetErrorString(error));\
+};
+
 namespace glee {
     using string= std::string;
-
-    void logGlErrors() {
-        auto error = glGetError();
-        if (error) {
-            LOG(WARN, "GL_ERROR: %s", glewGetErrorString(error));
-        }
-    }
 
     std::string readAllLines(std::string path){
         std::ifstream file(path);
@@ -60,19 +59,22 @@ namespace glee {
         glShaderSource(shaderFragment, 1, &src_fragment, &src_fragment_size);
 
         glCompileShader(shaderVertex);
-        logGlErrors();
+        LOG_GL_ERROR
         logGlShaderErrors(shaderVertex);
         glCompileShader(shaderFragment);
-        logGlErrors();
+        LOG_GL_ERROR
         logGlShaderErrors(shaderFragment);
 
         glAttachShader(_shaderProgram, shaderVertex);
-        logGlErrors();
+        LOG_GL_ERROR
         glAttachShader(_shaderProgram, shaderFragment);
-        logGlErrors();
+        LOG_GL_ERROR
+
+//        glBindFragDataLocation(_shaderProgram, 0, "pixelColor");
+        LOG_GL_ERROR
 
         glLinkProgram(_shaderProgram);
-        logGlErrors();
+        LOG_GL_ERROR
 
         GLint isLinked = 0;
         glGetProgramiv(_shaderProgram, GL_LINK_STATUS, &isLinked);
@@ -92,7 +94,7 @@ namespace glee {
 
 
         glValidateProgram(_shaderProgram);
-        logGlErrors();
+        LOG_GL_ERROR
 
         GLint isValid = 0;
         glGetProgramiv(_shaderProgram, GL_VALIDATE_STATUS, &isValid);
@@ -111,6 +113,7 @@ namespace glee {
         }
 
         glUseProgram(_shaderProgram);
+        LOG_GL_ERROR
 
         _uniformProjectionMatrix = glGetUniformLocation(_shaderProgram, "projectionMatrix");
         _uniformModelViewMatrix = glGetUniformLocation(_shaderProgram, "modelViewMatrix");
@@ -123,12 +126,9 @@ namespace glee {
         };
 
         glUniformMatrix4fv(_uniformProjectionMatrix, 1, GL_FALSE, matrixIdentity);
-        logGlErrors();
+        LOG_GL_ERROR
         glUniformMatrix4fv(_uniformModelViewMatrix, 1, GL_FALSE, matrixIdentity);
-        logGlErrors();
-
-        glBindFragDataLocation(_shaderProgram, GL_COLOR_ATTACHMENT0, "pixelColor");
-
+        LOG_GL_ERROR
     }
 
 
@@ -186,7 +186,25 @@ namespace glee {
                 // TODO: Check for double-buffering and clearing options
 
                 glUseProgram(_shaderProgram);
+                LOG_GL_ERROR
+
+                _uniformProjectionMatrix = glGetUniformLocation(_shaderProgram, "projectionMatrix");
+                _uniformModelViewMatrix = glGetUniformLocation(_shaderProgram, "modelViewMatrix");
+
+                float matrixIdentity[]{
+                    1.0f, 0.0f, 0.0f, 0.0f,
+                    0.0f, 1.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 1.0f, 0.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f
+                };
+
+                glUniformMatrix4fv(_uniformProjectionMatrix, 1, GL_FALSE, matrixIdentity);
+                LOG_GL_ERROR
+                glUniformMatrix4fv(_uniformModelViewMatrix, 1, GL_FALSE, matrixIdentity);
+                LOG_GL_ERROR
+
                 callRenderCallbacks(delta);
+                LOG_GL_ERROR
 
                 SDL_GL_SwapWindow(_sdlWindow);
             }
