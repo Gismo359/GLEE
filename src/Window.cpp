@@ -3,41 +3,30 @@
 //
 
 #include <GL/glew.h>
+#include <sstream>
+#include <fstream>
 #include "Window.hpp"
 #include "Log.hpp"
 
 namespace glee {
     using string= std::string;
-    const string VERTEX_SHADER_SRC = ""
-        "\n#version 410"
-        "\nlayout (location = 0) in vec2 position;"
-        "\n"
-        "\nuniform mat4 projectionMatrix;"
-        "\nuniform mat4 modelViewMatrix;"
-        "\n"
-        "\nout vec4 finalVertexPosition;"
-        "\nvoid main(){"
-        "\n   finalVertexPosition = vec4(position, 0.0, 1.0);"
-        "\n   gl_Position = finalVertexPosition;"
-        "\n}"
-        "\n";
-    const string FRAGMENT_SHADER_SRC = ""
-        "\n#version 410"
-        "\nlayout (location = 1) in vec4 vertexColor;"
-        "\nout vec4 pixelColor;"
-        "\nvoid main(){"
-        "\n   pixelColor = vec4(1.0, 1.0, 1.0, 1.0);"
-        "\n                         "
-        "\n}"
-        "\n"
-        "\n";
 
     void logGlErrors() {
         auto error = glGetError();
         if (error) {
             LOG(WARN, "GL_ERROR: %s", glewGetErrorString(error));
         }
+    }
 
+    std::string readAllLines(std::string path){
+        std::ifstream file(path);
+        std::string line;
+        std::ostringstream stream;
+        while(std::getline(file, line)){
+            stream << line << '\n';
+        }
+
+        return stream.str();
     }
 
     void logGlShaderErrors(GLuint shader) {
@@ -55,14 +44,17 @@ namespace glee {
 
     void Window::compileShaderProgram() {
         _shaderProgram = glCreateProgram();
+        auto shaderVertexSource = readAllLines("../shader_v.glsl");
+        auto shaderFragmentSource = readAllLines("../shader_f.glsl");
+
         auto shaderVertex = glCreateShader(GL_VERTEX_SHADER);
         auto shaderFragment = glCreateShader(GL_FRAGMENT_SHADER);
 
-        auto src_vertex = VERTEX_SHADER_SRC.c_str();
-        auto src_vertex_size = static_cast<GLint>(VERTEX_SHADER_SRC.size());
+        auto src_vertex = shaderVertexSource.c_str();
+        auto src_vertex_size = static_cast<GLint>(shaderVertexSource.size());
 
-        auto src_fragment = FRAGMENT_SHADER_SRC.c_str();
-        auto src_fragment_size = static_cast<GLint>(VERTEX_SHADER_SRC.size());
+        auto src_fragment = shaderFragmentSource.c_str();
+        auto src_fragment_size = static_cast<GLint>(shaderFragmentSource.size());
 
         glShaderSource(shaderVertex, 1, &src_vertex, &src_vertex_size);
         glShaderSource(shaderFragment, 1, &src_fragment, &src_fragment_size);

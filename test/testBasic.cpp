@@ -18,7 +18,7 @@ int main() {
 //    LineBatch batch;
     auto line1 = Line{
         vec2{ 0.0, 0.0 },
-        vec2{ 2.0, 2.0 }
+        vec2{ -.5, .5 }
     };
     line1.setColors(
         0xFFFFFFFF,
@@ -37,10 +37,6 @@ int main() {
     window.addRenderCallback([&line1](Window& window, float delta) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         line1.draw();
-        glBegin(GL_LINES);
-        glVertex2f(0.0, 0.0);
-        glVertex2f(10.0, static_cast<GLfloat>(-1.0));
-        glEnd();
     });
 
     window.loop();

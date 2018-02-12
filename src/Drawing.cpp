@@ -46,9 +46,9 @@ namespace glee {
             _endColor.x, _endColor.y, _endColor.z, _endColor.w,
         };
 
-//        glBindBuffer(GL_ARRAY_BUFFER, _vbo);
-//        glBufferSubData(GL_ARRAY_BUFFER, 4 * sizeof(float), 4 * 2 * sizeof(float), data);
-//        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+        glBufferSubData(GL_ARRAY_BUFFER, 4 * sizeof(float), 4 * 2 * sizeof(float), data);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     void Line::bindToVAO() const {
@@ -121,7 +121,7 @@ namespace glee {
             (GLvoid*) (sizeof(float) * 4)
         );
 
-        glDrawArrays(GL_LINES, 0, 1);
+        glDrawArrays(GL_LINES, 0, 2);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
