@@ -24,8 +24,8 @@ int main() {
 
     batch.addLine(Line{
         vec2{ 0.5f, 0.0f },
-        vec2{ -.5f, .5f }
-    }.setEndColor(0xFFFF0000u));
+        vec2{ -.1f, .5f }
+    });
     glEnableClientState(GL_VERTEX_ARRAY);
 
     window.addEventCallback([](Window& window, Uint32 delta, SDL_Event event) {
@@ -37,7 +37,7 @@ int main() {
 
     window.addRenderCallback([&batch](Window& window, float delta) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        batch.draw();
+        batch.draw(false);
     });
 
     window.loop();

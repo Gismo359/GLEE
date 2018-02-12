@@ -16,14 +16,19 @@ namespace glee {
         markDirty();
     }
 
-    void LineBatch::draw() noexcept {
-        if (isDirty())
-            cleanUp();
+    void LineBatch::draw(bool useVAO) noexcept {
+        if (useVAO) {
+            if (isDirty())
+                cleanUp();
 
-        glBindVertexArray(_vao);
-        glDrawArrays(GL_LINES, 0, _lines.size() * 2);
-        glBindVertexArray(0);
-
+            glBindVertexArray(_vao);
+            glDrawArrays(GL_LINES, 0, _lines.size() * 2);
+            glBindVertexArray(0);
+        } else {
+            for(const auto& line : _lines){
+                line.draw();
+            }
+        }
     }
 
     void LineBatch::cleanUp() noexcept {

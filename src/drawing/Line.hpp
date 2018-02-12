@@ -124,7 +124,7 @@ namespace glee {
             throw std::exception{ };
         }
 
-        void draw();
+        void draw() const noexcept;
         void bindToVAO() const;
 
         ~Line();

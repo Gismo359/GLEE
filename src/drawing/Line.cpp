@@ -67,7 +67,7 @@ namespace glee {
 
     }
 
-    void Line::draw() {
+    void Line::draw() const noexcept {
         glBindBuffer(GL_ARRAY_BUFFER, _vbo);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);

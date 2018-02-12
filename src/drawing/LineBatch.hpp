@@ -37,7 +37,7 @@ namespace glee {
             markDirty();
         }
 
-        void draw() noexcept;
+        void draw(bool useVAO = true) noexcept;
 
         ~LineBatch();
 
