@@ -3,6 +3,7 @@ project(GLEE)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 
 set(GLEE_SOURCE
     src/Utils.hpp
@@ -12,6 +13,8 @@ set(GLEE_SOURCE
     src/drawing/Line.cpp
     src/Window.cpp
     src/Window.hpp
+    src/EventHandlers.hpp
+    src/GLEE.cpp
     src/GLEE.hpp)
 
 add_library(GLEE SHARED ${GLEE_SOURCE})

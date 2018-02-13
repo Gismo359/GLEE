@@ -130,7 +130,11 @@ namespace glee {
         glUniformMatrix4fv(_uniformModelViewMatrix, 1, GL_FALSE, matrixIdentity);
         LOG_GL_ERROR
     }
+    std::set<Window *> Window::_windowTracker;
 
+    void Window::Render(uint32_t delta) {
+        for (auto &&window : _windowTracker) { window->render(delta); }
+    }
 
     void Window::callRenderCallbacks(Uint32 delta) {
         for (auto&& function : _renderCallbacks) { function(*this, delta); }
@@ -143,99 +147,70 @@ namespace glee {
                 // TODO: Do something else once handled?
                 break;
         }
-    }
 
-    Window::Window(const std::string& title, int x, int y, int width, int height) {
-        if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO) == -1) {
-            LOG(ERROR, "SDL Failed to initialize!");
-            abort();
-        }
+    Window::Window(const std::string &title, int x, int y, int width, int height) {
 
         _sdlWindow = SDL_CreateWindow(title.c_str(), x, y, width, height, SDL_WINDOW_OPENGL);
-        auto context = SDL_GL_CreateContext(_sdlWindow);
+        if (!_sdlWindow) { LOG(ERROR, "Failed to initialize window: %s", SDL_GetError()); }
 
+        _sdlGlContext = SDL_GL_CreateContext(_sdlWindow);
+        if (!_sdlGlContext) { LOG(ERROR, "Failed to initialize OpenGL context: %s", SDL_GetError()); }
         glewExperimental = true;
         auto error = glewInit();
 
-        if (error) {
-            LOG(INFO, "%s", glewGetErrorString(error));
-        }
+        if (error) { LOG(INFO, "%s", glewGetErrorString(error)); }
 
-        compileShaderProgram();
-        LOG(INFO, "%s -> %s", glGetString(GL_VENDOR), glGetString(GL_VERSION));
-    }
+        // Swap buffers at creation
+        swapBuffers();
+        makeCurrentContext();
 
-    void Window::loop() {
-        _running = true;
-
-        SDL_GL_SwapWindow(_sdlWindow);
-        Uint32 lastTick = SDL_GetTicks();
-
-        while (_running) {
-            Uint32 currentTick = SDL_GetTicks();
-            Uint32 delta = currentTick - lastTick;
-
-            SDL_Event event;
-            while (SDL_PollEvent(&event)) {
-                // TODO: Filter or preprocess some events?
-                callEventCallbacks(delta, event);
-            }
-
-            // TODO: Comprimise for multiple missed frames
-            if (delta > getFrameLength()) {
-                // TODO: Check for double-buffering and clearing options
-
-                glUseProgram(_shaderProgram);
-                LOG_GL_ERROR
-
-                _uniformProjectionMatrix = glGetUniformLocation(_shaderProgram, "projectionMatrix");
-                _uniformModelViewMatrix = glGetUniformLocation(_shaderProgram, "modelViewMatrix");
-
-                float matrixIdentity[]{
-                    1.0f, 0.0f, 0.0f, 0.0f,
-                    0.0f, 1.0f, 0.0f, 0.0f,
-                    0.0f, 0.0f, 1.0f, 0.0f,
-                    0.0f, 0.0f, 0.0f, 1.0f
-                };
-
-                glUniformMatrix4fv(_uniformProjectionMatrix, 1, GL_FALSE, matrixIdentity);
-                LOG_GL_ERROR
-                glUniformMatrix4fv(_uniformModelViewMatrix, 1, GL_FALSE, matrixIdentity);
-                LOG_GL_ERROR
-
-                callRenderCallbacks(delta);
-                LOG_GL_ERROR
-
-                SDL_GL_SwapWindow(_sdlWindow);
-            }
-        }
+        _windowTracker.insert(this);
     }
 
     // TODO: Maybe add separate wrappers for width/height
-    void Window::getSize(int& width, int& height) const { SDL_GetWindowSize(_sdlWindow, &width, &height); }
+    void Window::getSize(int &width, int &height) const { SDL_GetWindowSize(_sdlWindow, &width, &height); }
 
     void Window::setSize(int width, int height) { SDL_SetWindowSize(_sdlWindow, width, height); }
 
-    Uint32 Window::getFrameLength() const { return _frameLength; }
+    void Window::swapBuffer() { SDL_GL_SwapWindow(this->_sdlWindow); }
 
-    void Window::setFrameLength(Uint32 newLength) { _frameLength = newLength; }
+    void Window::addRenderHandler(RenderHandler callback, CallbackData data) { this->_renderCallbacks.push_back(std::make_pair(callback, data)); }
+
+    void Window::render(uint32_t delta) const {
+        makeCurrentContext();
+        for (auto &&pair : this->_renderCallbacks) { pair.first(delta, pair.second); }
+        swapBuffers();
+    }
+
+    void Window::swapBuffers() const { SDL_GL_SwapWindow(this->_sdlWindow); }
+
+    int Window::makeCurrentContext() const {
+        auto error = SDL_GL_MakeCurrent(this->_sdlWindow, this->_sdlGlContext);
+        if (error) { LOG(ERROR, "Could not set OpenGL context to window: %s", SDL_GetError()); }
+        return error;
+    }
 
     std::string Window::getTitle() const { return SDL_GetWindowTitle(_sdlWindow); }
 
-    void Window::setTitle(const std::string& title) { SDL_SetWindowTitle(_sdlWindow, title.c_str()); }
+    void Window::setTitle(const std::string &title) { SDL_SetWindowTitle(_sdlWindow, title.c_str()); }
 
-    void Window::addRenderCallback(Window::RenderCallback callback) { _renderCallbacks.push_back(callback); }
-
-    void Window::addEventCallback(Window::EventCallback callback) { _eventCallbacks.push_back(callback); }
-
-    void Window::stop() {
-        // TODO: Do render-specific cleanup if necessary
-        _running = false;
+    uint32_t Window::getWindowId() const {
+        uint32_t windowId = SDL_GetWindowID(this->_sdlWindow);
+        if (!windowId) { LOG(ERROR, "Enable to retrieve window ID: %s", SDL_GetError()); }
+        return windowId;
     }
 
-    void Window::close() {
-        stop();
-        SDL_DestroyWindow(_sdlWindow);
-        SDL_Quit();
+    bool Window::operator<(Window other) const { return this->_sdlWindow < other._sdlWindow; }
+
+    bool Window::operator>(Window other) const { return this->_sdlWindow > other._sdlWindow; }
+
+    bool Window::operator==(Window other) const { return this->_sdlWindow == other._sdlWindow; }
+
+    Window::~Window() {
+        _windowTracker.erase(_windowTracker.find(this));
+
+        SDL_GL_DeleteContext(this->_sdlGlContext);
+        SDL_DestroyWindow(this->_sdlWindow);
     }
+
 } // namespace glee
