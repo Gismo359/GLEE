@@ -20,7 +20,7 @@ Window CreateWindow() {
 
     window.addRenderHandler(
         [](uint32_t delta, glee::CallbackData data) {
-            static auto line1 = Line{vec2{1.0, 1.0}, vec2{-1.0, -1.0}};
+            auto line1 = Line{vec2{1.0, 1.0}, vec2{-1.0, -1.0}};
             line1.setColors(0xFFFFFFFF, 0xFF00FF00);
             line1.draw();
         },

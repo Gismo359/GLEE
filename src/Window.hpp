@@ -8,12 +8,13 @@
 #include "EventHandlers.hpp"
 
 #include <SDL2/SDL.h>
+#include <set>
 #include <string>
 
 namespace glee {
     class Window {
       private:
-        static std::vector<Window *> _windowTracker;
+        static std::set<Window *> _windowTracker;
 
         // TODO reorder the members here to account for cache-missing.
         SDL_Window *_sdlWindow;
@@ -39,7 +40,8 @@ namespace glee {
         void addRenderHandler(RenderHandler callback, CallbackData data);
         void render(uint32_t delta) const;
 
-        void makeCurrentContext() const;
+        void swapBuffers() const;
+        int makeCurrentContext() const;
 
         uint32_t getWindowId() const;
 

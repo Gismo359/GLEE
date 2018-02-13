@@ -5,13 +5,11 @@
 #include "GLEE.hpp"
 
 #include <GL/glew.h>
-#include <sstream>
-#include <fstream>
 #include "Window.hpp"
 #include "Log.hpp"
 
 namespace glee {
-    std::vector<Window *> Window::_windowTracker;
+    std::set<Window *> Window::_windowTracker;
 
     void Window::Render(uint32_t delta) {
         for (auto &&window : _windowTracker) { window->render(delta); }
@@ -29,9 +27,11 @@ namespace glee {
 
         if (error) { LOG(INFO, "%s", glewGetErrorString(error)); }
 
-        SDL_GL_SwapWindow(this->_sdlWindow);
+        // Swap buffers at creation
+        swapBuffers();
+        makeCurrentContext();
 
-        _windowTracker.push_back(this);
+        _windowTracker.insert(this);
     }
 
     // TODO: Maybe add separate wrappers for width/height
@@ -44,11 +44,18 @@ namespace glee {
     void Window::addRenderHandler(RenderHandler callback, CallbackData data) { this->_renderCallbacks.push_back(std::make_pair(callback, data)); }
 
     void Window::render(uint32_t delta) const {
+        makeCurrentContext();
         for (auto &&pair : this->_renderCallbacks) { pair.first(delta, pair.second); }
-        SDL_GL_SwapWindow(this->_sdlWindow);
+        swapBuffers();
     }
 
-    void Window::makeCurrentContext() const { SDL_GL_MakeCurrent(this->_sdlWindow, this->_sdlGlContext); }
+    void Window::swapBuffers() const { SDL_GL_SwapWindow(this->_sdlWindow); }
+
+    int Window::makeCurrentContext() const {
+        auto error = SDL_GL_MakeCurrent(this->_sdlWindow, this->_sdlGlContext);
+        if (error) { LOG(ERROR, "Could not set OpenGL context to window: %s", SDL_GetError()); }
+        return error;
+    }
 
     std::string Window::getTitle() const { return SDL_GetWindowTitle(_sdlWindow); }
 
@@ -66,6 +73,11 @@ namespace glee {
 
     bool Window::operator==(Window other) const { return this->_sdlWindow == other._sdlWindow; }
 
-    Window::~Window() { SDL_DestroyWindow(_sdlWindow); }
+    Window::~Window() {
+        _windowTracker.erase(_windowTracker.find(this));
+
+        SDL_GL_DeleteContext(this->_sdlGlContext);
+        SDL_DestroyWindow(this->_sdlWindow);
+    }
 
 } // namespace glee
