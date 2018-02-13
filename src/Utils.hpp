@@ -6,11 +6,13 @@
 #define GLEE_UTILS_HPP
 
 #include <GL/glew.h>
+#include <glm/vec4.hpp>
 
 namespace glee{
-    void deleteIfVAO(GLuint vao) {
-        if (glIsVertexArray(vao) == GL_TRUE)
-            glDeleteVertexArrays(1, &vao);
-    }
+    using glm::vec4;
+
+    void deleteIfVAO(GLuint vao) ;
+    vec4 argbToVec4(uint32_t argb);
+
 };
 #endif //GLEE_UTILS_HPP

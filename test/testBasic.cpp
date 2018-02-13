@@ -1,5 +1,4 @@
 #include "../src/GLEE.hpp"
-#include "../src/Log.hpp"
 
 using glee::Line;
 using glee::LineBatch;
@@ -12,7 +11,6 @@ using glm::vec2;
 using glm::vec2;
 
 Window CreateWindow() {
-
     Window window{"GLEE Test Window", 10, 10, 800, 600};
 
     //    LineBatch batch;
@@ -29,7 +27,7 @@ Window CreateWindow() {
 }
 
 int main() {
-    // TODO: Fix my clang-format so stuff arent so ugly, lol
+    // TODO: Fix my clang-format so stuff aren't so ugly, lol
     glee::Init();
 
     Window win1 = CreateWindow();

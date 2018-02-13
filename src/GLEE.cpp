@@ -2,16 +2,21 @@
 
 #include "Log.hpp"
 
-#include <set>
-#include <functional>
-
 #include <fstream>
 #include <sstream>
 
+#define LOG_GL_ERROR {\
+    auto error = glGetError();\
+    if (error) LOG(WARN, "GL_ERROR: %d -> %s", error, glewGetErrorString(error));\
+};
+
 namespace glee {
+
     // Anonymous namespace to keep variables from cluttering namespaces
     // TODO: Move to source file because there is no need for the user to even see these
     namespace {
+        using std::string;
+
         std::vector<EventHandlerPair> _eventCallbacks;
 
         // Frame length in milliseconds
@@ -24,8 +29,9 @@ namespace glee {
         void ProcessRenderHandlers(uint32_t delta);
 
         void ProcessEventHandlers(uint32_t delta, SDL_Event event) {
-            for (auto &&pair : _eventCallbacks) { pair.first(delta, event, pair.second); }
+            for (auto&& pair : _eventCallbacks) { pair.first(delta, event, pair.second); }
         }
+
         // TODO: Move to GL section(s)
         uint32_t _shaderProgram = 0;
         int32_t _uniformProjectionMatrix = 0;
@@ -34,22 +40,22 @@ namespace glee {
         void ProcessRenderHandlers(uint32_t delta) {
             // Rendering is called per-window but is scheduled statically
             // This causes some problems but I cant think of a way to avoid it currently
+
+            ///* ^^ I have a really elegant proof of this, but this margins is too narrow *///
             Window::Render(delta);
         }
 
     } // namespace
 
     // TODO: Move to proper sections
-    void logGlErrors() {
-        auto error = glGetError();
-        if (error) { LOG(WARN, "GL_ERROR: %s, (%d)", glewGetErrorString(error), error); }
-    }
 
     std::string readAllLines(std::string path) {
         std::ifstream file(path);
         std::string line;
         std::ostringstream stream;
-        while (std::getline(file, line)) { stream << line << '\n'; }
+        while (std::getline(file, line)) {
+            stream << line << '\n';
+        }
 
         return stream.str();
     }
@@ -61,7 +67,7 @@ namespace glee {
         glGetShaderInfoLog(shader, static_cast<GLsizei>(log.size()), &len, &log[0]);
 
         if (log.size() > 0) {
-            auto infoLogString = std::string(std::begin(log), std::end(log));
+            auto infoLogString = string(std::begin(log), std::end(log));
 
             LOG(ERROR, "Couldn't compile shaders. %s", infoLogString.c_str());
         }
@@ -69,8 +75,8 @@ namespace glee {
 
     void compileShaderProgram() {
         _shaderProgram = glCreateProgram();
-        auto shaderVertexSource = readAllLines("./shader_v.glsl");
-        auto shaderFragmentSource = readAllLines("./shader_f.glsl");
+        auto shaderVertexSource = readAllLines("../shader_v.glsl");
+        auto shaderFragmentSource = readAllLines("../shader_f.glsl");
 
         auto shaderVertex = glCreateShader(GL_VERTEX_SHADER);
         auto shaderFragment = glCreateShader(GL_FRAGMENT_SHADER);
@@ -85,19 +91,22 @@ namespace glee {
         glShaderSource(shaderFragment, 1, &src_fragment, &src_fragment_size);
 
         glCompileShader(shaderVertex);
-        logGlErrors();
+        LOG_GL_ERROR
         logGlShaderErrors(shaderVertex);
         glCompileShader(shaderFragment);
-        logGlErrors();
+        LOG_GL_ERROR
         logGlShaderErrors(shaderFragment);
 
         glAttachShader(_shaderProgram, shaderVertex);
-        logGlErrors();
+        LOG_GL_ERROR
         glAttachShader(_shaderProgram, shaderFragment);
-        logGlErrors();
+        LOG_GL_ERROR
+
+//        glBindFragDataLocation(_shaderProgram, 0, "pixelColor");
+//        LOG_GL_ERROR
 
         glLinkProgram(_shaderProgram);
-        logGlErrors();
+        LOG_GL_ERROR
 
         GLint isLinked = 0;
         glGetProgramiv(_shaderProgram, GL_LINK_STATUS, &isLinked);
@@ -109,14 +118,14 @@ namespace glee {
             std::vector<GLchar> infoLog(static_cast<unsigned long>(maxLength));
             glGetProgramInfoLog(_shaderProgram, maxLength, &maxLength, &infoLog[0]);
 
-            auto infoLogString = std::string(std::begin(infoLog), std::end(infoLog));
+            auto infoLogString = string(std::begin(infoLog), std::end(infoLog));
             LOG(ERROR, "Couldn't link shaders. %s", infoLogString.c_str());
 
             glDeleteProgram(_shaderProgram);
         }
 
         glValidateProgram(_shaderProgram);
-        logGlErrors();
+        LOG_GL_ERROR
 
         GLint isValid = 0;
         glGetProgramiv(_shaderProgram, GL_VALIDATE_STATUS, &isValid);
@@ -127,16 +136,35 @@ namespace glee {
             std::vector<GLchar> infoLog(static_cast<unsigned long>(maxLength));
             glGetProgramInfoLog(_shaderProgram, maxLength, &maxLength, &infoLog[0]);
 
-            auto infoLogString = std::string(std::begin(infoLog), std::end(infoLog));
+            auto infoLogString = string(std::begin(infoLog), std::end(infoLog));
 
-            LOG(ERROR, "Couldn't link shaders. %s", infoLogString.c_str());
+            LOG(ERROR, "Couldn't validate shaders. %s", infoLogString.c_str());
 
             glDeleteProgram(_shaderProgram);
         }
-        LOG(INFO, "GL specs: %s, %s, %s", glGetString(GL_VENDOR), glGetString(GL_RENDERER), glGetString(GL_VERSION));
+
+        glUseProgram(_shaderProgram);
+        LOG_GL_ERROR
+
+        _uniformProjectionMatrix = glGetUniformLocation(_shaderProgram, "projectionMatrix");
+        _uniformModelViewMatrix = glGetUniformLocation(_shaderProgram, "modelViewMatrix");
+
+        float matrixIdentity[]{
+            1.f, 0.f, 0.f, 0.f,
+            0.f, 1.f, 0.f, 0.f,
+            0.f, 0.f, 1.f, 0.f,
+            0.f, 0.f, 0.f, 1.f
+        };
+
+        glUniformMatrix4fv(_uniformProjectionMatrix, 1, GL_FALSE, matrixIdentity);
+        LOG_GL_ERROR
+        glUniformMatrix4fv(_uniformModelViewMatrix, 1, GL_FALSE, matrixIdentity);
+        LOG_GL_ERROR
     }
 
-    void AddEventCallback(EventHandler callback, CallbackData data) { _eventCallbacks.push_back(std::make_pair(callback, data)); }
+    void AddEventCallback(EventHandler callback, CallbackData data) {
+        _eventCallbacks.push_back(std::make_pair(callback, data));
+    }
 
     int Init() {
         auto error = SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_AUDIO);

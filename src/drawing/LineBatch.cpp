@@ -8,6 +8,37 @@
 namespace glee {
     using glm::vec2;
 
+    GLuint createVAOLine(GLuint vbo) {
+        GLuint vao;
+        glGenVertexArrays(1, &vao);
+
+        glBindVertexArray(vao);
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(
+            0,
+            2,
+            GL_FLOAT,
+            GL_FALSE,
+            sizeof(float) * 4,
+            (GLvoid*) 0
+        );
+
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(
+            1,
+            4,
+            GL_FLOAT,
+            GL_FALSE,
+            sizeof(float) * (4 + 2),
+            (GLvoid*) (sizeof(float) * 2)
+        );
+
+        glBindVertexArray(0);
+
+        return vao;
+    }
 
     LineBatch::LineBatch() noexcept : _vao{ 0 } {}
 
@@ -15,6 +46,7 @@ namespace glee {
         _lines = lines;
         markDirty();
     }
+
 
     void LineBatch::draw(bool useVAO) noexcept {
         if (useVAO) {
@@ -25,20 +57,13 @@ namespace glee {
             glDrawArrays(GL_LINES, 0, _lines.size() * 2);
             glBindVertexArray(0);
         } else {
-            for(const auto& line : _lines){
+            for (const auto& line : _lines) {
                 line.draw();
             }
         }
     }
 
     void LineBatch::cleanUp() noexcept {
-        deleteIfVAO(_vao);
-        glGenVertexArrays(1, &_vao);
-        glBindVertexArray(_vao);
-        for (const auto& line : _lines) {
-            line.bindToVAO();
-        }
-        glBindVertexArray(0);
         _dirty = false;
     }
 

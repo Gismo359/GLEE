@@ -5,6 +5,8 @@
 #ifndef GLEE_LINE_HPP
 #define GLEE_LINE_HPP
 
+#include "../Utils.hpp"
+
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 #include <GL/gl.h>
@@ -18,8 +20,8 @@ namespace glee {
     using glm::vec2;
     using glm::vec4;
 
-    vec4 argbToVec4(uint32_t argb);
     GLuint createVBOLine(bool);
+
 
     class Line {
         void updateVertices() const;
@@ -125,7 +127,6 @@ namespace glee {
         }
 
         void draw() const noexcept;
-        void bindToVAO() const;
 
         ~Line();
 

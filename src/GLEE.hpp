@@ -7,6 +7,8 @@
 
 #include "Utils.hpp"
 #include "Window.hpp"
+#include "Color.hpp"
+#include "Log.hpp"
 #include "drawing/Line.hpp"
 #include "drawing/LineBatch.hpp"
 

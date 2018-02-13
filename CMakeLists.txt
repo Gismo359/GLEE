@@ -7,10 +7,14 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 
 set(GLEE_SOURCE
     src/Utils.hpp
+    src/Utils.cpp
     src/drawing/LineBatch.hpp
     src/drawing/LineBatch.cpp
     src/drawing/Line.hpp
     src/drawing/Line.cpp
+    src/drawing/Vertex2.hpp
+    src/drawing/Vertex2.cpp
+    src/Color.hpp
     src/Window.cpp
     src/Window.hpp
     src/EventHandlers.hpp
